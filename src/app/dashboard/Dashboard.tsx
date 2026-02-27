@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAssets } from "../hooks/useAssets";
 
 interface Asset {
   id: string;
@@ -81,23 +82,47 @@ export function Dashboard() {
     "all" | "crypto" | "stock"
   >("all");
 
+  const { data: allAssets = MOCK_ASSETS, isLoading, error } = useAssets();
+
   const filteredAssets =
     selectedCategory === "all"
-      ? MOCK_ASSETS
-      : MOCK_ASSETS.filter((a) => a.category === selectedCategory);
+      ? allAssets
+      : allAssets.filter((a) => a.category === selectedCategory);
 
-  const totalValue = MOCK_ASSETS.reduce(
-    (sum, asset) => sum + asset.amount * asset.currentPrice,
+  const totalValue = allAssets.reduce(
+    (sum: number, asset: Asset) => sum + asset.amount * asset.currentPrice,
     0,
   );
-  const cryptoValue = MOCK_ASSETS.filter((a) => a.category === "crypto").reduce(
-    (sum, asset) => sum + asset.amount * asset.currentPrice,
-    0,
-  );
-  const stockValue = MOCK_ASSETS.filter((a) => a.category === "stock").reduce(
-    (sum, asset) => sum + asset.amount * asset.currentPrice,
-    0,
-  );
+  const cryptoValue = allAssets
+    .filter((a) => a.category === "crypto")
+    .reduce(
+      (sum: number, asset: Asset) => sum + asset.amount * asset.currentPrice,
+      0,
+    );
+  const stockValue = allAssets
+    .filter((a) => a.category === "stock")
+    .reduce(
+      (sum: number, asset: Asset) => sum + asset.amount * asset.currentPrice,
+      0,
+    );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 md:p-8 flex items-center justify-center">
+        <p className="text-slate-600">Loading portfolio data...</p>
+      </div>
+    );
+  }
+
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 md:p-8 flex items-center justify-center">
+  //       <p className="text-red-600">
+  //         Error loading portfolio data. Please try again later.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 md:p-8">
@@ -221,7 +246,9 @@ export function Dashboard() {
                 <div className="flex justify-between items-end">
                   <span className="text-slate-600 text-sm">Price per unit</span>
                   <span className="font-semibold text-slate-900">
-                    ${asset.currentPrice.toLocaleString()}
+                    €{asset.currentPrice.toLocaleString("en-US", {
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
                 <div className="flex justify-between items-end">
@@ -238,7 +265,7 @@ export function Dashboard() {
                     Total Value
                   </span>
                   <span className="text-lg font-bold text-slate-900">
-                    $
+                    €
                     {assetValue.toLocaleString("en-US", {
                       maximumFractionDigits: 2,
                     })}
